@@ -57,7 +57,7 @@ output "Instance_Id" {
 }
 
 # Instance_url
-output "Instance_Id" {
+output "Instance_url" {
   value = format("http://%s", aws_instance.tf_ec2.public_ip)
 }
 
