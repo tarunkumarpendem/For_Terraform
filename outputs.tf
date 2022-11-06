@@ -56,6 +56,12 @@ output "Instance_Id" {
   value = aws_instance.tf_ec2.id
 }
 
+# Instance_url
+output "Instance_Id" {
+  value = format("http://%s", aws_instance.tf_ec2.public_ip)
+}
+
+
 # TargetGroup_ARN
 output "TargetGroup_ARN" {
   value = aws_lb_target_group.tf_tg.arn
@@ -71,6 +77,11 @@ output "TG_Attach_Id" {
 output "ALB_arn" {
   value = aws_lb.tf_alb.id 
 }
+
+# Application load balancer DNS Name    
+output "ALB_DNS" {
+  value = aws_lb.tf_alb.dns_name
+}                            
 
 # Listener_Id
 output "Listener_arn" {
