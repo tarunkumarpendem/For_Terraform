@@ -3,6 +3,9 @@ pipeline{
     parameters{
         choice(name: 'Branch_to_Build', choices: ['main'], description: 'Selecting Branch') 
     }
+    triggers{
+        pollSCM('* * * * *')
+    }
     post{
         always{
             echo 'build is completed'
@@ -45,8 +48,8 @@ pipeline{
                  //sh 'pwd'
                  //sh 'ls -al'
                  sh 'terraform init'
-                 //sh 'terraform apply -var-file="dev.tfvars" -auto-approve '
-                 sh 'terraform destroy -var-file="dev.tfvars" -auto-approve'  
+                 sh 'terraform apply -var-file="dev.tfvars" -auto-approve '
+                 //sh 'terraform destroy -var-file="dev.tfvars" -auto-approve'  
             }
         } 
     }
