@@ -1,7 +1,7 @@
 pipeline{
     agent { label 'python3.10'}
     parameters{
-        choice(name: 'Branch_to_Build', choices: ['main','terraform'], description: 'Selecting Branch') 
+        choice(name: 'Branch_to_Build', choices: ['main'], description: 'Selecting Branch') 
     }
     post{
         always{
@@ -35,7 +35,7 @@ pipeline{
     stages{
         stage('clone'){
             steps{
-                git url: 'https://github.com/tarunkumarpendem/Terraform.git',
+                git url: 'https://github.com/tarunkumarpendem/For_Terraform.git',
                     branch: "${params.Branch_to_Build}"
             }
         }
@@ -44,12 +44,10 @@ pipeline{
                  //sh 'cd Autoscaling/'
                  //sh 'pwd'
                  //sh 'ls -al'
-                 //sh 'terraform init'
-                 //sh 'terraform apply -var-file="dev.tfvars" -auto-approve '
-                 sh 'terraform destroy -var-file="dev.tfvars" -auto-approve'  
+                 sh 'terraform init'
+                 sh 'terraform apply -var-file="dev.tfvars" -auto-approve '
+                 //sh 'terraform destroy -var-file="dev.tfvars" -auto-approve'  
             }
         } 
     }
 }
-
-
