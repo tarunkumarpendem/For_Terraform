@@ -4,7 +4,7 @@
 steps:
 ------
 * First we need to create a vpc ( we can also use default VPC )
-C:\Users\tarun\Downloads\git\For_Terraform\Images\tg.png
+![preview](Images/vpc.png)
 * Then we need to create subnets ( we can use default subnets for this also)
 (subnets.png)
 * Then we need to create an Internet Gateway which is for providing internet for the vpc ideally we have to attach internet gateway to vpc but we need not do that if we create it from terraform, because it will attach Internet Gate Way to VPC while creating internet gateway it self ( we can use default internet gateway for this also) 
