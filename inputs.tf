@@ -40,5 +40,6 @@ variable "launch_template" {
   type = object({
     ami_id        = string
     instance_type = string
+    keypair       = string
   })
 }

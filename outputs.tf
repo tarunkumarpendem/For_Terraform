@@ -41,14 +41,19 @@ output "SecurityGroup_id" {
 
 
 # Launch_Template_Id
-output "LaunchTemplate_id" {
+/*output "LaunchTemplate_id" {
   value = aws_launch_template.tf_lt.id
-}
+}*/
 
 
 # AutoScalingGroup_Id
-output "ASG_id" {
+/*output "ASG_id" {
   value = aws_autoscaling_group.tf_ASG.id
+}*/
+
+# Instance_Id
+output "Instance_Id" {
+  value = aws_instance.tf_ec2.id
 }
 
 # TargetGroup_ARN
@@ -58,9 +63,9 @@ output "TargetGroup_ARN" {
 
 
 # TargetGroupAttachment_Id
-/*output "TG_Attach_Id" {
+output "TG_Attach_Id" {
   value = aws_lb_target_group_attachment.TF_TG_Attach.id
-}*/
+}
 
 # Application_Load_Balancer_Id
 output "ALB_arn" {

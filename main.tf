@@ -110,7 +110,7 @@ resource "aws_security_group" "tf_sg" {
 }
 
 # Create Launch Template 
-resource "aws_launch_template" "tf_lt" {
+/*resource "aws_launch_template" "tf_lt" {
   name     = "Terraform-launch-template"
   key_name = var.Keypair
   block_device_mappings {
@@ -139,11 +139,11 @@ resource "aws_launch_template" "tf_lt" {
   depends_on = [
     aws_security_group.tf_sg
   ]
-}
+}*/
 
 
 # Auto sclaing Group
-resource "aws_autoscaling_group" "tf_ASG" {
+/*resource "aws_autoscaling_group" "tf_ASG" {
   name                      = "ASG_TF"
   health_check_grace_period = 300
   health_check_type         = "ELB"
@@ -160,6 +160,23 @@ resource "aws_autoscaling_group" "tf_ASG" {
     value               = "Teffaform_ASG"
     propagate_at_launch = true
   }
+}*/
+
+# create EC2 Instance
+resource "aws_instance" "tf_ec2" {
+  ami                         = var.launch_template.ami_id
+  instance_type               = var.launch_template.instance_type
+  key_name                    = var.launch_template.keypair
+  subnet_id                   = aws_subnet.tf_subnet[0].id
+  availability_zone           = var.availability_zone[0]
+  associate_public_ip_address = true
+  security_groups             = [aws_security_group.tf_sg.id]
+  tags = {
+    "Name" = "Terraform_EC2_Instance"
+  }
+  depends_on = [
+    aws_security_group.tf_sg
+  ]
 }
 
 
@@ -186,15 +203,15 @@ resource "aws_lb_target_group" "tf_tg" {
 
 
 # Attach instance Target Group
-/*resource "aws_lb_target_group_attachment" "TF_TG_Attach" {
+resource "aws_lb_target_group_attachment" "TF_TG_Attach" {
   target_group_arn  = aws_lb_target_group.tf_tg.arn
-  target_id         = aws_autoscaling_group.tf_ASG.id
+  target_id         = aws_instance.tf_ec2.id
   port              = "80"
-  availability_zone = var.availability_zone[0]
+  #availability_zone = var.availability_zone[0]
   depends_on = [
     aws_lb_target_group.tf_tg
   ]
-}*/
+}
 
 
 # create application load balancer
@@ -214,16 +231,16 @@ resource "aws_lb" "tf_alb" {
 
 # create listener
 resource "aws_lb_listener" "tf_alb_listener" {
-    default_action {
-      type   =  "forward"
-      target_group_arn = aws_lb_target_group.tf_tg.arn
-    }
-    load_balancer_arn = aws_lb.tf_alb.arn
-    port = "80"
-    protocol = "HTTP"
-    tags = {
-      "Name" = "Listener-1"
-    } 
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.tf_tg.arn
+  }
+  load_balancer_arn = aws_lb.tf_alb.arn
+  port              = "80"
+  protocol          = "HTTP"
+  tags = {
+    "Name" = "Listener-1"
+  }
 }
 
 
