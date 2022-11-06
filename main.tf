@@ -24,7 +24,6 @@ resource "aws_subnet" "tf_subnet" {
   ]
 }
 
-
 # Create Internet Gateway
 resource "aws_internet_gateway" "tf_IGW" {
   vpc_id = aws_vpc.tf_vpc.id
@@ -35,6 +34,7 @@ resource "aws_internet_gateway" "tf_IGW" {
     aws_vpc.tf_vpc
   ]
 }
+
 
 
 # Create Route Table
@@ -108,6 +108,7 @@ resource "aws_security_group" "tf_sg" {
     "Name" = "SG-tf"
   }
 }
+
 
 # Create Launch Template 
 /*resource "aws_launch_template" "tf_lt" {
@@ -213,7 +214,6 @@ resource "aws_lb_target_group_attachment" "TF_TG_Attach" {
   ]
 }
 
-
 # create application load balancer
 resource "aws_lb" "tf_alb" {
   name               = "Tf-ApplicationLoadBalancer"
@@ -242,5 +242,3 @@ resource "aws_lb_listener" "tf_alb_listener" {
     "Name" = "Listener-1"
   }
 }
-
-

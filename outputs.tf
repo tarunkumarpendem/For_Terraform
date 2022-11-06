@@ -71,3 +71,8 @@ output "TG_Attach_Id" {
 output "ALB_arn" {
   value = aws_lb.tf_alb.id 
 }
+
+# Listener_Id
+output "Listener_arn" {
+  value = aws_lb_listener.tf_alb_listener.id  
+}
