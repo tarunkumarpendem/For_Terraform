@@ -3,8 +3,8 @@ pipeline{
     parameters{
         choice(name: 'Branch_to_Build', choices: ['main'], description: 'Selecting Branch') 
     }
-    triggers{
-        pollSCM('* * * * *')
+    /*triggers{
+        pollSCM('* * * * *')*/
     }
     post{
         always{
