@@ -4,8 +4,8 @@ pipeline{
         choice(name: 'Branch_to_Build', choices: ['main'], description: 'Selecting Branch') 
     }
     /*triggers{
-        pollSCM('* * * * *')*/
-    }
+        pollSCM('* * * * *')
+    }*/
     post{
         always{
             echo 'build is completed'
