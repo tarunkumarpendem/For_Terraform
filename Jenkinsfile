@@ -48,8 +48,8 @@ pipeline{
                  //sh 'pwd'
                  //sh 'ls -al'
                  sh 'terraform init'
-                 sh 'terraform apply -var-file="dev.tfvars" -auto-approve '
-                 //sh 'terraform destroy -var-file="dev.tfvars" -auto-approve'  
+                 //sh 'terraform apply -var-file="dev.tfvars" -auto-approve '
+                 sh 'terraform destroy -var-file="dev.tfvars" -auto-approve'  
             }
         } 
     }
