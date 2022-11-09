@@ -87,3 +87,18 @@ output "ALB_DNS" {
 output "Listener_arn" {
   value = aws_lb_listener.tf_alb_listener.id  
 }
+
+# Subnet Group Id
+output "SubentGroup_Id" {
+  value = aws_db_subnet_group.tf_subnetgroup.id
+}
+
+# Subnet Group Name
+output "SubentGroup_Name" {
+  value = aws_db_subnet_group.tf_subnetgroup.name
+}
+
+# mysql db id
+output "mysql_db_Id" {
+  value = aws_db_instance.tf_mysql_db.id
+}

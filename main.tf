@@ -97,6 +97,13 @@ resource "aws_security_group" "tf_sg" {
     protocol    = "tcp"
     to_port     = "80"
   }
+  ingress {
+    cidr_blocks = [var.destination_cidr]
+    description = "open 3306"
+    from_port   = "3306"
+    protocol    = "tcp"
+    to_port     = "3306"
+  }
   egress {
     from_port        = 0
     to_port          = 0
@@ -205,9 +212,9 @@ resource "aws_lb_target_group" "tf_tg" {
 
 # Attach instance Target Group
 resource "aws_lb_target_group_attachment" "TF_TG_Attach" {
-  target_group_arn  = aws_lb_target_group.tf_tg.arn
-  target_id         = aws_instance.tf_ec2.id
-  port              = "80"
+  target_group_arn = aws_lb_target_group.tf_tg.arn
+  target_id        = aws_instance.tf_ec2.id
+  port             = "80"
   #availability_zone = var.availability_zone[0]
   depends_on = [
     aws_lb_target_group.tf_tg
@@ -240,5 +247,34 @@ resource "aws_lb_listener" "tf_alb_listener" {
   protocol          = "HTTP"
   tags = {
     "Name" = "Listener-1"
+  }
+}
+
+
+# create subnet group
+resource "aws_db_subnet_group" "tf_subnetgroup" {
+  name       = "tfmysqldbsubnetgroup"
+  subnet_ids = [aws_subnet.tf_subnet[0].id, aws_subnet.tf_subnet[1].id, aws_subnet.tf_subnet[2].id]
+  tags = {
+    "Name" = "terraform_subnetgroup_for_mysql_database"
+  }
+}
+
+# create mysql db
+resource "aws_db_instance" "tf_mysql_db" {
+  allocated_storage      = 20
+  db_name                = "mysql_db_tf"
+  db_subnet_group_name   = aws_db_subnet_group.tf_subnetgroup.name
+  engine                 = "mysql"
+  engine_version         = "8.0.28"
+  instance_class         = "db.t3.micro"
+  username               = "mybd"
+  password               = "mydb123456"
+  availability_zone      = var.availability_zone[0]
+  port                   = 3306
+  vpc_security_group_ids = [aws_security_group.tf_sg.id]
+  skip_final_snapshot    = true
+  tags = {
+    "Name" = "mysql_database_terraform"
   }
 }
