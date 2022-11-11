@@ -2,87 +2,88 @@
 #--------------------------
 
 # Create VPC
-resource "aws_vpc" "tf_vpc" {
+resource "aws_vpc" "qa_vpc" {
   cidr_block = var.vpc_cidr
   tags = {
-    "Name" = "vpc-tf"
+    "Name" = "Qa_Vpc"
   }
 }
 
 
 # Create Subnets
-resource "aws_subnet" "tf_subnet" {
-  count             = length(var.availability_zone)
+resource "aws_subnet" "qa_subnet" {
+  count = length(var.subnet_cidr)
   cidr_block        = var.subnet_cidr[count.index]
   availability_zone = var.availability_zone[count.index]
-  vpc_id            = aws_vpc.tf_vpc.id
+  vpc_id            = aws_vpc.qa_vpc.id
   tags = {
-    "Name" = var.subnet_tags[count.index]
+    "Name" = "Qa_App_Subnet"
   }
   depends_on = [
-    aws_vpc.tf_vpc
+    aws_vpc.qa_vpc
   ]
 }
-
-# Create Internet Gateway
-resource "aws_internet_gateway" "tf_IGW" {
-  vpc_id = aws_vpc.tf_vpc.id
-  tags = {
-    "Name" = "IGW-tf"
-  }
-  depends_on = [
-    aws_vpc.tf_vpc
-  ]
-}
-
 
 
 # Create Route Table
-resource "aws_route_table" "tf_Rtb" {
-  vpc_id = aws_vpc.tf_vpc.id
+resource "aws_route_table" "qa_Rtb" {
+  vpc_id = aws_vpc.qa_vpc.id
   tags = {
-    "Name" = "Rtb-tf"
+    "Name" = "qa_Rtb"
   }
   depends_on = [
-    aws_vpc.tf_vpc
+    aws_vpc.qa_vpc
   ]
+}
+
+
+# allocate elastic ip
+resource "aws_eip" "elastic_ip" {
+  network_border_group = var.region
+}
+
+# create NAT Gateway
+resource "aws_nat_gateway" "qa_NAT" {
+  allocation_id = aws_eip.elastic_ip.allocation_id
+  subnet_id = aws_subnet.qa_subnet[0].id
+  tags = {
+    "Name" = "qa_NAT"
+  }
 }
 
 
 # Create Route to Route Table
-resource "aws_route" "tf_route" {
-  route_table_id         = aws_route_table.tf_Rtb.id
+resource "aws_route" "qa_rtb_route" {
+  route_table_id         = aws_route_table.qa_Rtb.id
   destination_cidr_block = var.destination_cidr
-  gateway_id             = aws_internet_gateway.tf_IGW.id
+  nat_gateway_id         = aws_nat_gateway.qa_NAT.id
   depends_on = [
-    aws_route_table.tf_Rtb
+    aws_route_table.qa_Rtb
   ]
 }
 
-# Associate Subnet1 to Route Table
+# Associate Subnet to Route Table
 resource "aws_route_table_association" "assc_subnet1" {
-  subnet_id      = aws_subnet.tf_subnet[0].id
-  route_table_id = aws_route_table.tf_Rtb.id
+  subnet_id      = aws_subnet.qa_subnet[0].id
+  route_table_id = aws_route_table.qa_Rtb.id
   depends_on = [
-    aws_route_table.tf_Rtb
+    aws_route_table.qa_Rtb
   ]
 }
 
-
-# Associate Subnet2 to Route Table
+# Associate Subnet to Route Table
 resource "aws_route_table_association" "assc_subnet2" {
-  subnet_id      = aws_subnet.tf_subnet[1].id
-  route_table_id = aws_route_table.tf_Rtb.id
+  subnet_id      = aws_subnet.qa_subnet[1].id
+  route_table_id = aws_route_table.qa_Rtb.id
   depends_on = [
-    aws_route_table.tf_Rtb
+    aws_route_table.qa_Rtb
   ]
 }
-
 
 # Create Security Group
-resource "aws_security_group" "tf_sg" {
-  description = "This is the sg from terraform"
-  vpc_id      = aws_vpc.tf_vpc.id
+resource "aws_security_group" "qa_sg" {
+  description = "This is the sg from terraform for qa environment"
+  vpc_id      = aws_vpc.qa_vpc.id
   ingress {
     cidr_blocks = [var.destination_cidr]
     description = "open ssh"
@@ -99,10 +100,24 @@ resource "aws_security_group" "tf_sg" {
   }
   ingress {
     cidr_blocks = [var.destination_cidr]
-    description = "open 3306"
-    from_port   = "3306"
+    description = "open 8080"
+    from_port   = "8080"
     protocol    = "tcp"
-    to_port     = "3306"
+    to_port     = "8080"
+  }
+  ingress {
+    cidr_blocks = [var.destination_cidr]
+    description = "open 8081"
+    from_port   = "8081"
+    protocol    = "tcp"
+    to_port     = "8081"
+  }
+  ingress {
+    cidr_blocks = [var.destination_cidr]
+    description = "open 4200"
+    from_port   = "4200"
+    protocol    = "tcp"
+    to_port     = "4200"
   }
   egress {
     from_port        = 0
@@ -112,88 +127,37 @@ resource "aws_security_group" "tf_sg" {
     ipv6_cidr_blocks = ["::/0"]
   }
   tags = {
-    "Name" = "SG-tf"
+    "Name" = "qa_sg"
   }
 }
 
-
-# Create Launch Template 
-/*resource "aws_launch_template" "tf_lt" {
-  name     = "Terraform-launch-template"
-  key_name = var.Keypair
-  block_device_mappings {
-    device_name = "/dev/sda1"
-    ebs {
-      volume_size = 8
-    }
-  }
-  image_id      = var.launch_template.ami_id
-  instance_type = var.launch_template.instance_type
-  placement {
-    availability_zone = "var.availability_zone[0]"
-  }
-  tag_specifications {
-    resource_type = "instance"
-
-    tags = {
-      Name = "LaunchTemplate-Tf"
-    }
-  }
-  network_interfaces {
-    subnet_id                   = aws_subnet.tf_subnet[0].id
-    security_groups             = [aws_security_group.tf_sg.id]
-    associate_public_ip_address = true
-  }
-  depends_on = [
-    aws_security_group.tf_sg
-  ]
-}*/
-
-
-# Auto sclaing Group
-/*resource "aws_autoscaling_group" "tf_ASG" {
-  name                      = "ASG_TF"
-  health_check_grace_period = 300
-  health_check_type         = "ELB"
-  min_size                  = "1"
-  max_size                  = "3"
-  availability_zones        = [var.availability_zone[0]]
-  desired_capacity          = "1"
-  launch_template {
-    id      = aws_launch_template.tf_lt.id
-    version = "$Latest"
-  }
-  tag {
-    key                 = "Name"
-    value               = "Teffaform_ASG"
-    propagate_at_launch = true
-  }
-}*/
 
 # create EC2 Instance
-resource "aws_instance" "tf_ec2" {
-  ami                         = var.launch_template.ami_id
-  instance_type               = var.launch_template.instance_type
-  key_name                    = var.launch_template.keypair
-  subnet_id                   = aws_subnet.tf_subnet[0].id
+resource "aws_instance" "qa_ec2" {
+  count                       = length(var.availability_zone)
+  ami                         = var.ec2_details.ami_id
+  instance_type               = var.ec2_details.instance_type
+  key_name                    = var.ec2_details.keypair
+  subnet_id                   = aws_subnet.qa_subnet[0].id
   availability_zone           = var.availability_zone[0]
-  associate_public_ip_address = true
-  security_groups             = [aws_security_group.tf_sg.id]
+  associate_public_ip_address = false
+  security_groups             = [aws_security_group.qa_sg.id]
   tags = {
-    "Name" = "Terraform_EC2_Instance"
+    "Name" = "QA_EC2_Instnace"
   }
   depends_on = [
-    aws_security_group.tf_sg
+    aws_security_group.qa_sg
   ]
 }
+
 
 
 # create TargetGroup
-resource "aws_lb_target_group" "tf_tg" {
-  name        = "TerraformTargetGroup"
+resource "aws_lb_target_group" "qa_tg" {
+  name        = "QATargetGroup"
   port        = "80"
   protocol    = "HTTP"
-  vpc_id      = aws_vpc.tf_vpc.id
+  vpc_id      = aws_vpc.qa_vpc.id
   target_type = "instance"
   health_check {
     enabled  = true
@@ -202,47 +166,47 @@ resource "aws_lb_target_group" "tf_tg" {
     path     = "/"
   }
   tags = {
-    "Name" = "Terraform_TargetGroup"
+    "Name" = "QA_TargetGroup"
   }
   depends_on = [
-    aws_vpc.tf_vpc
+    aws_vpc.qa_vpc
   ]
 }
 
 
 # Attach instance Target Group
-resource "aws_lb_target_group_attachment" "TF_TG_Attach" {
-  target_group_arn = aws_lb_target_group.tf_tg.arn
-  target_id        = aws_instance.tf_ec2.id
+resource "aws_lb_target_group_attachment" "QA_TG_Attach" {
+  target_group_arn = aws_lb_target_group.qa_tg.arn
+  target_id        = aws_instance.qa_ec2[0].id
   port             = "80"
   #availability_zone = var.availability_zone[0]
   depends_on = [
-    aws_lb_target_group.tf_tg
+    aws_lb_target_group.qa_tg
   ]
 }
 
 # create application load balancer
-resource "aws_lb" "tf_alb" {
-  name               = "Tf-ApplicationLoadBalancer"
+resource "aws_lb" "qa_alb" {
+  name               = "qa-ApplicationLoadBalancer"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.tf_sg.id]
-  subnets            = [aws_subnet.tf_subnet[0].id, aws_subnet.tf_subnet[1].id]
+  security_groups    = [aws_security_group.qa_sg.id]
+  subnets            = [aws_subnet.qa_subnet[0].id, aws_subnet.qa_subnet[1].id]
   tags = {
-    "Environment" = "Dev"
+    "Environment" = "qa"
   }
   depends_on = [
-    aws_lb_target_group.tf_tg
+    aws_lb_target_group.qa_tg
   ]
 }
 
 # create listener
-resource "aws_lb_listener" "tf_alb_listener" {
+resource "aws_lb_listener" "qa_alb_listener" {
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.tf_tg.arn
+    target_group_arn = aws_lb_target_group.qa_tg.arn
   }
-  load_balancer_arn = aws_lb.tf_alb.arn
+  load_balancer_arn = aws_lb.qa_alb.arn
   port              = "80"
   protocol          = "HTTP"
   tags = {
@@ -251,30 +215,29 @@ resource "aws_lb_listener" "tf_alb_listener" {
 }
 
 
-# create subnet group
-resource "aws_db_subnet_group" "tf_subnetgroup" {
-  name       = "tfmysqldbsubnetgroup"
-  subnet_ids = [aws_subnet.tf_subnet[0].id, aws_subnet.tf_subnet[1].id, aws_subnet.tf_subnet[2].id]
-  tags = {
-    "Name" = "terraform_subnetgroup_for_mysql_database"
+# null resource 
+/*resource "null_resource" "dev_null" {
+  triggers = {
+    "trigger_number" = var.trigger_number
   }
-}
+  provisioner "remote-exec" {
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      host        = aws_eip.elastic_ip.allocation_id
+      private_key = file("~/.ssh/id_rsa")
+    }
+    inline = [
+      "sudo apt update",
+      "curl -sL https://deb.nodesource.com/setup_16.x | sudo bash -",
+      "sudo apt -y install nodejs",
+      "sudo -i",
+      "git clone https://github.com/gothinkster/angular-realworld-example-app.git",
+      "cd angular-realworld-example-app/",
+      "npm install -g @angular/cli@8",
+      "npm install",
+      "ng serve"
+    ]
+  }
+}*/
 
-# create mysql db
-resource "aws_db_instance" "tf_mysql_db" {
-  allocated_storage      = 20
-  db_name                = "mysql_db_tf"
-  db_subnet_group_name   = aws_db_subnet_group.tf_subnetgroup.name
-  engine                 = "mysql"
-  engine_version         = "8.0.28"
-  instance_class         = "db.t3.micro"
-  username               = "mybd"
-  password               = "mydb123456"
-  availability_zone      = var.availability_zone[0]
-  port                   = 3306
-  vpc_security_group_ids = [aws_security_group.tf_sg.id]
-  skip_final_snapshot    = true
-  tags = {
-    "Name" = "mysql_database_terraform"
-  }
-}
