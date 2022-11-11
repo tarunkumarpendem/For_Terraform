@@ -1,6 +1,6 @@
 variable "region" {
   type    = string
-  default = "us-west-2"
+  default = "us-east-1"
 }
 
 variable "vpc_cidr" {
@@ -9,25 +9,17 @@ variable "vpc_cidr" {
 }
 
 variable "subnet_cidr" {
-  type    = list(string)
-  default = ["192.168.0.0/24", "192.168.1.0/24", "192.168.2.0/24"]
+  type    = string
+  default = "192.168.0.0/24"
 }
 
 variable "availability_zone" {
-  type = list(string)
+  type = string
 }
 
 variable "destination_cidr" {
   type    = string
   default = "0.0.0.0/0"
-}
-
-variable "launch_template_id" {
-  type = string
-}
-
-variable "subnet_tags" {
-  type = list(string)
 }
 
 variable "Keypair" {
@@ -36,10 +28,14 @@ variable "Keypair" {
 }
 
 
-variable "launch_template" {
+variable "ec2_details" {
   type = object({
     ami_id        = string
     instance_type = string
     keypair       = string
   })
+}
+
+variable "trigger_number" {
+  type = string
 }
